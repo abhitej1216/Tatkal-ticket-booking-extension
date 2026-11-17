@@ -1,0 +1,24 @@
+# System & OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Directories
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Python cache & build files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Scratch & patch files
+scratch/
+patch_*.py

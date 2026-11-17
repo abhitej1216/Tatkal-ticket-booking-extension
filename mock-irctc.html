@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock IRCTC NextGen e-Ticketing System - Test Bench</title>
+  <style>
+    :root {
+      --irctc-blue: #213d77;
+      --irctc-orange: #fb792b;
+      --bg-gray: #f5f5f5;
+      --border-color: #d1d5db;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: var(--bg-gray); color: #333; padding-bottom: 60px; }
+
+    header {
+      background: var(--irctc-blue);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .header-logo { font-size: 20px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+    .test-badge { background: var(--irctc-orange); color: white; padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+
+    .nav-steps {
+      display: flex;
+      background: #e9ecef;
+      border-bottom: 2px solid var(--border-color);
+      padding: 8px 24px;
+      gap: 16px;
+      overflow-x: auto;
+    }
+    .step-tab {
+      padding: 8px 16px;
+      border-radius: 20px;
+      background: white;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-tab.active {
+      background: var(--irctc-blue);
+      color: white;
+      border-color: var(--irctc-blue);
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+      border: 1px solid #e5e7eb;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--irctc-blue);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    label { font-size: 13px; font-weight: 600; color: #4b5563; }
+    input, select {
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: var(--irctc-blue);
+      box-shadow: 0 0 0 2px rgba(33, 61, 119, 0.15);
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--irctc-blue); color: white; }
+    .btn-primary:hover { background: #162a53; }
+    .btn-orange { background: var(--irctc-orange); color: white; }
+    .btn-orange:hover { background: #e06518; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-outline { border: 1px solid var(--irctc-blue); background: transparent; color: var(--irctc-blue); }
+    .btn-outline:hover { background: #f0f4fc; }
+
+    /* Passenger Table Styles */
+    .psgn-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.5fr 1fr 40px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 12px;
+    }
+    .remove-psgn {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 18px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .notice-box {
+      background: #eff6ff;
+      border-left: 4px solid var(--irctc-blue);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #1e40af;
+      margin-bottom: 20px;
+    }
+    .warning-box {
+      background: #fffbeb;
+      border-left: 4px solid var(--irctc-orange);
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #b45309;
+      margin-bottom: 20px;
+    }
+
+    .test-actions-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #111827;
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+      z-index: 9999;
+    }
+    .test-status { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+    .status-bulb { width: 10px; height: 10px; border-radius: 50%; background: #10b981; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-logo">
+      <span>🚆 IRCTC NEXT GENERATION E-TICKETING SYSTEM</span>
+      <span class="test-badge">SIMULATED TEST BENCH</span>
+    </div>
+    <div style="font-size: 13px; color: #dbeafe;">
+      Tatkal Booking Simulation Mode
+    </div>
+  </header>
+
+  <!-- Navigation Stages -->
+  <div class="nav-steps">
+    <div class="step-tab active" onclick="switchStage('search')">1. Search & Journey</div>
+    <div class="step-tab" onclick="switchStage('trainlist')">2. Train List</div>
+    <div class="step-tab" onclick="switchStage('passenger')">3. Passenger Details</div>
+    <div class="step-tab" onclick="switchStage('review')">4. Review & CAPTCHA</div>
+    <div class="step-tab" onclick="switchStage('payment')">5. Payment Gateway</div>
+  </div>
+
+  <div class="container">
+    <div class="notice-box">
+      <strong>🧪 Extension Testing Instructions:</strong><br>
+      1. Open the extension popup from your Chrome toolbar.<br>
+      2. Configure your passenger details (Name, Age, Gender, Berth preference) and save a group.<br>
+      3. Set your Journey Configuration (e.g. NDLS ➔ BCT, Tatkal quota).<br>
+      4. Click <b>"Start Assistant"</b> or <b>"Fill Details"</b> in the popup, or test each stage below!
+    </div>
+
+    <!-- ========================================== -->
+    <!-- STAGE 1: SEARCH & JOURNEY FORM             -->
+    <!-- ========================================== -->
+    <div id="search-section" class="card">
+      <div class="card-title">
+        <span>BOOK TICKET</span>
+        <span style="font-size: 12px; color: #6b7280;">Simulates IRCTC /nget/train-search</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group" id="origin">
+          <label>From Station *</label>
+          <input type="text" id="sourceStation" placeholder="Enter Source (e.g. NDLS)" aria-label="From*" autocomplete="off">
+        </div>
+        <div class="form-group" id="destination">
+          <label>To Station *</label>
+          <input type="text" id="destStation" placeholder="Enter Destination (e.g. BCT)" aria-label="To*" autocomplete="off">
+        </div>
+        <div class="form-group" id="jDate">
+          <label>Date (DD/MM/YYYY) *</label>
+          <input type="text" id="journeyDate" placeholder="DD/MM/YYYY *" autocomplete="off">
+        </div>
+        <div class="form-group" id="journeyClass">
+          <label>Class</label>
+          <select id="travelClass" formcontrolname="journeyClass">
+            <option value="All Classes">All Classes</option>
+            <option value="SL">Sleeper (SL)</option>
+            <option value="3A">AC 3 Tier (3A)</option>
+            <option value="2A">AC 2 Tier (2A)</option>
+            <option value="1A">AC First Class (1A)</option>
+            <option value="CC">AC Chair Car (CC)</option>
+            <option value="2S">Second Sitting (2S)</option>
+          </select>
+        </div>
+        <div class="form-group" id="journeyQuota">
+          <label>Quota *</label>
+          <select id="quotaSelect" formcontrolname="journeyQuota">
+            <option value="GENERAL">GENERAL</option>
+            <option value="TATKAL">TATKAL</option>
+            <option value="PREMIUM TATKAL">PREMIUM TATKAL</option>
+            <option value="LADIES">LADIES</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-orange" id="searchTrains" onclick="switchStage('trainlist')">Search Trains & Continue ➔</button>
+      </div>
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- STAGE 2: TRAIN LIST SECTION                -->
+    <!-- ========================================== -->
+    <div id="train-list-section" class="card app-train-list" style="display: none;">
+      <div class="card-title">
+        <span>AVAILABLE TRAINS (app-train-list)</span>
+        <span style="font-size: 12px; color: #6b7280;">Simulates IRCTC /nget/train-list</span>
+      </div>
+
+      <div class="notice-box">
+        💡 Auto-Pilot scans for the train matching your configured <b>Train Number/Name</b> and clicks your selected <b>Class</b> (e.g. 3A, SL), then clicks <b>Book Now</b>!
+      </div>
+
+      <!-- Train Card 1 -->
+      <div class="card app-train-avl-enq" style="border: 1px solid #cbd5e1; margin-bottom: 16px; padding: 16px;">
+        <div class="train-heading" style="font-size: 16px; font-weight: bold; color: var(--irctc-blue); margin-bottom: 8px;">
+          12952 - MMCT TEJAS RAJ (NEW DELHI - MUMBAI CENTRAL)
+        </div>
+        <div style="font-size: 12px; color: #64748b; margin-bottom: 12px;">
+          Runs On: M T W T F S S | Departure: 16:55 | Arrival: 08:35
+        </div>
+
+        <!-- Class buttons -->
+        <div style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="pre-avail" onclick="selectMockClass(this, '3A')" style="border: 2px solid var(--irctc-blue); padding: 8px 16px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 90px; background: #f0f4fc;">
+            <strong>3A</strong>
+            <div style="font-size: 11px; color: #16a34a; font-weight: bold;">AVL 42</div>
+          </div>
+          <div class="pre-avail" onclick="selectMockClass(this, '2A')" style="border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 90px;">
+            <strong>2A</strong>
+            <div style="font-size: 11px; color: #16a34a;">AVL 18</div>
+          </div>
+          <div class="pre-avail" onclick="selectMockClass(this, '1A')" style="border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 90px;">
+            <strong>1A</strong>
+            <div style="font-size: 11px; color: #dc2626;">WL 4</div>
+          </div>
+          <div class="pre-avail" onclick="selectMockClass(this, 'SL')" style="border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 90px;">
+            <strong>SL</strong>
+            <div style="font-size: 11px; color: #16a34a;">AVL 120</div>
+          </div>
+        </div>
+
+        <!-- Expanded Date Availability Slots (mimics live IRCTC NextGen) -->
+        <div id="mockDateSlots" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+          <div class="col-xs-3 col-sm-2 date-card" onclick="selectMockDate(this)" style="border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 95px; background: #fff;">
+            <strong>Wed, 18 Nov</strong>
+            <div style="font-size: 11px; color: #dc2626; font-weight: bold;">WL61</div>
+          </div>
+          <div class="col-xs-3 col-sm-2 date-card" onclick="selectMockDate(this)" style="border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 95px; background: #fff;">
+            <strong>Thu, 19 Nov</strong>
+            <div style="font-size: 11px; color: #dc2626; font-weight: bold;">WL48</div>
+          </div>
+          <div class="col-xs-3 col-sm-2 date-card" onclick="selectMockDate(this)" style="border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 95px; background: #fff;">
+            <strong>Fri, 20 Nov</strong>
+            <div style="font-size: 11px; color: #dc2626; font-weight: bold;">WL57</div>
+          </div>
+          <div class="col-xs-3 col-sm-2 date-card" onclick="selectMockDate(this)" style="border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 6px; cursor: pointer; text-align: center; min-width: 95px; background: #fff;">
+            <strong>Sat, 21 Nov</strong>
+            <div style="font-size: 11px; color: #dc2626; font-weight: bold;">WL63</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+          <button class="btn btn-orange btnDefault train_Search" id="mockBookNowBtn" disabled style="opacity: 0.6; cursor: not-allowed;" onclick="switchStage('passenger')">
+            Book Now ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAGE 3: PASSENGER ENTRY FORM              -->
+    <!-- ========================================== -->
+    <div id="passenger-form-section" class="card" style="display: none;">
+      <div class="card-title">
+        <span>Passenger Details (app-passenger-details)</span>
+        <button class="btn btn-outline" id="addPassenger" onclick="addPassengerRow()">+ Add Passenger</button>
+      </div>
+
+      <div class="notice-box">
+        💡 The extension content script will detect these rows and autofill Name, Age, Gender, Berth, and Food choice. It clicks "+ Add Passenger" automatically if your group has multiple passengers!
+      </div>
+
+      <div id="passenger-container" class="passenger-form">
+        <!-- Default Passenger 1 Row -->
+        <div class="psgn-row" data-index="0">
+          <div class="form-group">
+            <label>Passenger Name *</label>
+            <input type="text" formcontrolname="passengerName" placeholder="Name" maxlength="60" required>
+          </div>
+          <div class="form-group">
+            <label>Age *</label>
+            <input type="number" formcontrolname="passengerAge" placeholder="Age" min="1" max="125" required>
+          </div>
+          <div class="form-group">
+            <label>Gender *</label>
+            <select formcontrolname="passengerGender">
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Transgender">Transgender</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Berth Preference</label>
+            <select formcontrolname="passengerBerthChoice">
+              <option value="No Preference">No Preference</option>
+              <option value="Lower">Lower</option>
+              <option value="Middle">Middle</option>
+              <option value="Upper">Upper</option>
+              <option value="Side Lower">Side Lower</option>
+              <option value="Side Upper">Side Upper</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Food Choice</label>
+            <select formcontrolname="passengerFoodChoice">
+              <option value="No Food">No Food</option>
+              <option value="Veg">Veg</option>
+              <option value="Non-Veg">Non-Veg</option>
+            </select>
+          </div>
+          <div>
+            <button type="button" class="remove-psgn" onclick="removePassengerRow(this)" title="Remove">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Preferences -->
+      <div class="card" style="background: #f8fafc; border: 1px solid #e2e8f0; margin-top: 16px; padding: 14px;">
+        <strong style="font-size: 13px; display: block; margin-bottom: 10px;">Reservation Preferences:</strong>
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; font-size: 13px;">
+          <input type="checkbox" id="confirmberths" value="1">
+          <span><strong>Book only if confirm berths are allotted</strong></span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer; font-size: 13px;">
+          <input type="checkbox" id="autoUpgradation">
+          <span>Consider for Auto Upgradation</span>
+        </label>
+
+        <strong style="font-size: 13px; display: block; margin: 12px 0 8px;">Payment Mode:</strong>
+        <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; font-size: 13px;">
+          <input type="radio" name="paymentType" id="2" value="2" checked>
+          <span>Pay through BHIM/UPI (Convenience Fee: ₹10 + GST)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px;">
+          <input type="radio" name="paymentType" id="1" value="1">
+          <span>Pay through Credit & Debit Cards / Net Banking (Convenience Fee: ₹15 + GST)</span>
+        </label>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button class="btn btn-secondary" onclick="switchStage('trainlist')">⬅ Back to Trains</button>
+        <button class="btn btn-orange train_Search" id="psgnContinue" type="submit" onclick="switchStage('review')">Continue to Review ➔</button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- STAGE 3: BOOKING REVIEW & CAPTCHA          -->
+    <!-- ========================================== -->
+    <div id="review-section" class="card" style="display: none;">
+      <div class="card-title">
+        <span>Review Booking Details</span>
+      </div>
+
+      <div class="warning-box">
+        <strong>⚠️ IRCTC Security Policy Compliance:</strong><br>
+        This extension strictly respects security boundaries. CAPTCHA is entered <b>manually by the user</b>. No OCR or automated CAPTCHA bypass is permitted.
+      </div>
+
+      <div id="review-summary-box" style="line-height: 1.8; margin-bottom: 20px;">
+      </div>
+
+      <div style="background: #f3f4f6; padding: 16px; border-radius: 6px; margin-bottom: 20px; max-width: 320px;">
+        <label style="display: block; margin-bottom: 8px;">Simulated CAPTCHA Verification:</label>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
+          <div style="background: #e2e8f0; font-family: monospace; font-size: 20px; font-weight: bold; letter-spacing: 4px; padding: 6px 14px; border-radius: 4px; text-decoration: line-through;">
+            7K9mX
+          </div>
+          <span style="font-size: 12px; color: #6b7280;">Manual input required</span>
+        </div>
+        <input type="text" placeholder="Enter CAPTCHA" style="width: 100%;">
+      </div>
+
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-secondary" onclick="switchStage('passenger')">⬅ Back to Passengers</button>
+        <button class="btn btn-orange" onclick="switchStage('payment')">Proceed to Payment ➔</button>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- STAGE 4: PAYMENT OPTIONS                   -->
+    <!-- ========================================== -->
+    <div id="payment-section" class="card payment-opt" style="display: none;">
+      <div class="card-title">
+        <span>Payment Gateway Selection</span>
+        <span class="badge" style="background: #ef4444; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px;">
+          AUTOMATION HALTED SAFELY
+        </span>
+      </div>
+
+      <div class="warning-box">
+        <strong>🛑 Automated Actions Stopped:</strong><br>
+        As mandated by safety specifications, the extension immediately halts at the payment page. It never stores banking credentials, never selects payment providers automatically, and never submits payments.
+      </div>
+
+      <div class="bank-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 24px;">
+        <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; cursor: pointer; text-align: center;">
+          <b>💳 IRCTC iPay (UPI / Cards)</b>
+        </div>
+        <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; cursor: pointer; text-align: center;">
+          <b>🏦 Net Banking (State Bank of India)</b>
+        </div>
+        <div style="border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; cursor: pointer; text-align: center;">
+          <b>📱 UPI / QR Code</b>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary" onclick="switchStage('search')">🔄 Restart Booking Simulation</button>
+    </div>
+
+  </div>
+
+  <!-- Bottom status bar -->
+  <div class="test-actions-bar">
+    <div class="test-status">
+      <span class="status-bulb"></span>
+      <span>Mock IRCTC Environment Ready. Use the extension popup to autofill!</span>
+    </div>
+    <div>
+      <button class="btn btn-sm btn-primary" onclick="triggerDirectAutofill()">
+        ⚡ Run Direct Test Autofill
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function selectMockDate(el) {
+      document.querySelectorAll('.date-card').forEach(b => {
+        b.style.borderColor = '#cbd5e1';
+        b.style.background = '#fff';
+      });
+      el.style.borderColor = 'var(--irctc-orange)';
+      el.style.background = '#fff7ed';
+      const bookBtn = document.getElementById('mockBookNowBtn');
+      if (bookBtn) {
+        bookBtn.removeAttribute('disabled');
+        bookBtn.classList.remove('disabled');
+        bookBtn.style.opacity = '1';
+        bookBtn.style.cursor = 'pointer';
+      }
+    }
+
+    function selectMockClass(el, clsName) {
+      const parent = el.parentElement;
+      parent.querySelectorAll('.pre-avail').forEach(b => {
+        b.style.borderColor = '#cbd5e1';
+        b.style.background = '#fff';
+      });
+      el.style.borderColor = 'var(--irctc-blue)';
+      el.style.background = '#f0f4fc';
+    }
+
+    function switchStage(stage) {
+      document.getElementById('search-section').style.display = stage === 'search' ? 'block' : 'none';
+      const tl = document.getElementById('train-list-section');
+      if (tl) tl.style.display = stage === 'trainlist' ? 'block' : 'none';
+      document.getElementById('passenger-form-section').style.display = stage === 'passenger' ? 'block' : 'none';
+      document.getElementById('review-section').style.display = stage === 'review' ? 'block' : 'none';
+      document.getElementById('payment-section').style.display = stage === 'payment' ? 'block' : 'none';
+
+      const tabs = document.querySelectorAll('.step-tab');
+      tabs.forEach((t, idx) => {
+        const stages = ['search', 'trainlist', 'passenger', 'review', 'payment'];
+        t.classList.toggle('active', stages[idx] === stage);
+      });
+
+      if (stage === 'review') {
+        renderReviewSummary();
+      }
+
+      window.dispatchEvent(new Event('mockPageStageChanged'));
+    }
+
+    function addPassengerRow() {
+      const container = document.getElementById('passenger-container');
+      const count = container.querySelectorAll('.psgn-row').length;
+      const row = document.createElement('div');
+      row.className = 'psgn-row';
+      row.dataset.index = count;
+      row.innerHTML = `
+        <div class="form-group">
+          <label>Passenger Name *</label>
+          <input type="text" formcontrolname="passengerName" placeholder="Name" maxlength="60" required>
+        </div>
+        <div class="form-group">
+          <label>Age *</label>
+          <input type="number" formcontrolname="passengerAge" placeholder="Age" min="1" max="125" required>
+        </div>
+        <div class="form-group">
+          <label>Gender *</label>
+          <select formcontrolname="passengerGender">
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Transgender">Transgender</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Berth Preference</label>
+          <select formcontrolname="passengerBerthChoice">
+            <option value="No Preference">No Preference</option>
+            <option value="Lower">Lower</option>
+            <option value="Middle">Middle</option>
+            <option value="Upper">Upper</option>
+            <option value="Side Lower">Side Lower</option>
+            <option value="Side Upper">Side Upper</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Food Choice</label>
+          <select formcontrolname="passengerFoodChoice">
+            <option value="No Food">No Food</option>
+            <option value="Veg">Veg</option>
+            <option value="Non-Veg">Non-Veg</option>
+          </select>
+        </div>
+        <div>
+          <button type="button" class="remove-psgn" onclick="removePassengerRow(this)" title="Remove">✕</button>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    function removePassengerRow(btn) {
+      const row = btn.closest('.psgn-row');
+      if (row) row.remove();
+    }
+
+    function renderReviewSummary() {
+      const box = document.getElementById('review-summary-box');
+      const rows = document.querySelectorAll('.psgn-row');
+      let psgnHtml = '';
+
+      rows.forEach((r, idx) => {
+        const name = r.querySelector('input[formcontrolname="passengerName"]')?.value || 'Not entered';
+        const age = r.querySelector('input[formcontrolname="passengerAge"]')?.value || '--';
+        const gender = r.querySelector('select[formcontrolname="passengerGender"]')?.value || '--';
+        const berth = r.querySelector('select[formcontrolname="passengerBerthChoice"]')?.value || '--';
+        psgnHtml += `<div>• <b>Passenger ${idx+1}:</b> ${name} (${age} yrs, ${gender}) - Berth: ${berth}</div>`;
+      });
+
+      box.innerHTML = `
+        <div style="margin-bottom: 10px;">
+          <b>Source:</b> ${document.getElementById('sourceStation').value || 'NDLS'} ➔
+          <b>Destination:</b> ${document.getElementById('destStation').value || 'BCT'}
+          | <b>Quota:</b> ${document.getElementById('quotaSelect').value}
+        </div>
+        <div><strong>Passengers Entered:</strong></div>
+        ${psgnHtml || '<div>No passengers entered.</div>'}
+      `;
+    }
+
+    async function triggerDirectAutofill() {
+      if (window.__irctcAutofillInstance) {
+        await window.__irctcAutofillInstance.start();
+      } else {
+        alert('Please open the Chrome Extension Popup from your toolbar to trigger autofill!');
+      }
+    }
+  </script>
+</body>
+</html>
